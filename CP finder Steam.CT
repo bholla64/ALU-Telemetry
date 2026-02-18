@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"CP finder"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+// 41 8B 85 4C 02 00 00 = mov eax,[r13+0000024C]
+aobscanmodule(INJECT,Asphalt9_Steam_x64_rtl.exe,41 8B 85 4C 02 00 00)
+alloc(newmem,$1000,INJECT)
+
+label(code)
+label(return)
+
+
+label(Checkpoint)
+registersymbol(Checkpoint)
+registersymbol(INJECT)
+
+newmem:
+
+  push rdx
+  lea rdx,[r13+0000024C]
+  mov [Checkpoint],rdx
+  pop rdx
+
+code:
+  mov eax,[r13+0000024C]
+  jmp return
+
+//(8 bytes)
+Checkpoint:
+  dq 0
+
+INJECT:
+  jmp newmem
+  nop 2
+return:
+
+[DISABLE]
+INJECT:
+  db 41 8B 85 4C 02 00 00
+
+unregistersymbol(Checkpoint)
+unregistersymbol(INJECT)
+dealloc(newmem)
+
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>5</ID>
+      <Description>"CP value"</Description>
+      <ShowAsSigned>0</ShowAsSigned>
+      <VariableType>4 Bytes</VariableType>
+      <Address>Checkpoint</Address>
+      <Offsets>
+        <Offset>0</Offset>
+      </Offsets>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>

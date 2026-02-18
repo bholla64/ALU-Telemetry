@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"RT Finder"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+// Procura a instrução original: add [rdi+000000A0],rax
+// Bytes: 48 01 87 A0 00 00 00
+aobscan(INJECT_RAW,48 01 87 A0 00 00 00)
+alloc(newmem,$1000,INJECT_RAW)
+
+label(code)
+label(returnhere)
+
+label(RaceTimer)
+registersymbol(RaceTimer)
+registersymbol(INJECT_RAW)
+
+newmem:
+  add [rdi+000000A0],rax
+
+  push rbx
+  mov rbx,[rdi+000000A0]
+  mov [RaceTimer],ebx
+  pop rbx
+
+  jmp returnhere
+
+code:
+  add [rdi+000000A0],rax
+  jmp returnhere
+
+
+RaceTimer:
+  dd 0  // "dd" significa "Define Double Word" (4 Bytes Inteiro)
+
+INJECT_RAW:
+  jmp newmem
+  nop 2
+returnhere:
+
+[DISABLE]
+
+INJECT_RAW:
+  db 48 01 87 A0 00 00 00
+
+unregistersymbol(RaceTimer)
+unregistersymbol(INJECT_RAW)
+dealloc(newmem)
+
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>6</ID>
+      <Description>"RP Finder"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+// Target: Asphalt9_Steam_x64_rtl.exe
+// Assinatura:
+// Linha 1: mov [rdi+000001D8], eax  (Bytes: 89 87 D8 01 00 00)
+// Linha 2: add rsp, 38              (Bytes: 48 83 C4 38)
+// Isso garante que acharemos o local exato.
+aobscanmodule(INJECT_PROGRESS,Asphalt9_Steam_x64_rtl.exe,89 87 D8 01 00 00 48 83 C4 38)
+alloc(newmem_progress,$1000,INJECT_PROGRESS)
+
+label(code_progress)
+label(returnhere_progress)
+
+label(RaceProgress)
+registersymbol(RaceProgress)
+registersymbol(INJECT_PROGRESS)
+
+newmem_progress:
+  // Código original
+  mov [rdi+000001D8],eax
+
+  // Nossa injeção:
+  // Salva o registrador RBX para usá-lo com segurança
+  push rbx
+  // Lê exatamente o valor que acabou de ser gravado no offset 1D8
+  mov ebx,[rdi+000001D8]
+  // Move esse valor para nossa variável visual
+  mov [RaceProgress],ebx
+  // Restaura RBX
+  pop rbx
+
+  jmp returnhere_progress
+
+code_progress:
+  mov [rdi+000001D8],eax
+  jmp returnhere_progress
+
+RaceProgress:
+  dd 0  // Float placeholder
+
+INJECT_PROGRESS:
+  jmp newmem_progress
+  nop
+returnhere_progress:
+
+[DISABLE]
+
+INJECT_PROGRESS:
+  db 89 87 D8 01 00 00
+
+unregistersymbol(RaceProgress)
+unregistersymbol(INJECT_PROGRESS)
+dealloc(newmem_progress)
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>3</ID>
+          <Description>"Race Time"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>RaceTimer</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>7</ID>
+          <Description>"Race Progress"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>RaceProgress</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <LuaScript>[ENABLE]
+// Aloca memória para o script
+alloc(newmem, 2048, "Asphalt9_Steam_x64_rtl.exe")
+
+label(returnhere)
+label(pRaceData)
+registersymbol(pRaceData)
+
+// Usamos a assinatura do TIMER, que já sabemos que funciona na Steam
+aobscanmodule(INJECT_TIMER, Asphalt9_Steam_x64_rtl.exe, 48 01 87 A0 00 00 00)
+registersymbol(INJECT_TIMER)
+
+newmem:
+  // Captura o endereço base (RDI) através da função do Tempo
+  mov [pRaceData], rdi
+
+  // Executa a instrução original do tempo (RAW)
+  add [rdi+000000A0], rax
+  jmp returnhere
+
+pRaceData:
+  dq 0
+
+INJECT_TIMER:
+  jmp newmem
+  nop 2
+returnhere:
+
+[DISABLE]
+INJECT_TIMER:
+  db 48 01 87 A0 00 00 00
+
+unregistersymbol(INJECT_TIMER)
+unregistersymbol(pRaceData)
+dealloc(newmem)
+</LuaScript>
+</CheatTable>

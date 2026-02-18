@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"Gearbox Info"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+// Target: Asphalt9_Steam_x64_rtl.exe
+// Hook: RPM Write Instruction
+// Opcode: movss [rdi+000001B8],xmm1
+// Bytes: F3 0F 11 8F B8 01 00 00
+
+aobscanmodule(INJECT_DASHBOARD,Asphalt9_Steam_x64_rtl.exe,F3 0F 11 8F B8 01 00 00)
+alloc(newmem,$1000,INJECT_DASHBOARD)
+
+label(code)
+label(return)
+
+label(RaceRPM_Raw)    // Float original
+label(RaceRPM_Int)    // Inteiro convertido
+label(RaceGear)       // Marcha (4 bytes)
+
+registersymbol(RaceRPM_Raw)
+registersymbol(RaceRPM_Int)
+registersymbol(RaceGear)
+registersymbol(INJECT_DASHBOARD)
+
+newmem:
+
+  movss [rdi+000001B8],xmm1
+
+  movss [RaceRPM_Raw], xmm1
+
+  push rax
+  cvttss2si eax, xmm1   // Converte Float (xmm1) para Int (eax) truncado
+  mov [RaceRPM_Int], eax
+  pop rax
+
+  // gear
+  // Cálculo do Offset:
+  // Endereço RPM = Base + 1B8
+  // Endereço Gear = Endereço RPM - 118 (Hex)
+  // Logo: Base + 1B8 - 118 = Base + A0
+  push rax
+  mov eax,[rdi+000000A0] // Lê o valor da marcha no offset A0
+  mov [RaceGear],eax
+  pop rax
+
+  jmp return
+
+code:
+  movss [rdi+000001B8],xmm1
+  jmp return
+
+// var
+RaceRPM_Raw:
+  dd 0
+RaceRPM_Int:
+  dd 0
+RaceGear:
+  dd 0
+
+INJECT_DASHBOARD:
+  jmp newmem
+  nop 3 // Preenche para totalizar 8 bytes da instrução original
+return:
+
+[DISABLE]
+
+INJECT_DASHBOARD:
+  db F3 0F 11 8F B8 01 00 00
+
+unregistersymbol(RaceRPM_Raw)
+unregistersymbol(RaceRPM_Int)
+unregistersymbol(RaceGear)
+unregistersymbol(INJECT_DASHBOARD)
+dealloc(newmem)
+
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>1</ID>
+          <Description>"RPM_Raw"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>RaceRPM_Raw</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>2</ID>
+          <Description>"RPM"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>RaceRPM_Int</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>3</ID>
+          <Description>"Gear"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>RaceGear</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>

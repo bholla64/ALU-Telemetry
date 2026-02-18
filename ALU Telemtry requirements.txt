@@ -1,0 +1,66 @@
+ALU Telemtry - a tool for Asphalt Legends Unite which uses data extracted from RAM to display critical information to a player and save it to a ghost file. No modifications to the memory will be done. It should be optimized for maximum performance without sacrificing consistency or usability.
+
+Here are all the RAW data points that will be collected and recorded, make sure the architecture allows for the addition of more data points later on and make sure the formats for each remain flexible (will be specified later on):
+- Velocity
+- Car Angle
+- Car Position
+- Camera Angle
+- Camera Position
+- Race completion %
+- Checkpoint #
+- Timer value
+- Nitro bar %
+- Nitro state
+- Drift state
+- 360 state
+- Gear
+- Engine RPM
+- Acceleration
+
+
+Here are the four files I have created for you to edit. I have laid out basic requirements for each file, which will be added onto later. When working on requirements for one file, you are free to add features to another file that were not specified in that file's requirements. Ensure that organization is maintained by making each function in the proper file. (all functions that interact directly with the GUI should be in the GUI file, and all functions that interact directly with ghost files in any way should be in the ghost_manager file, etc.)
+
+telemetry.bat:
+- if it detects no virtual python environment:
+--- sets up a virtual python environment
+--- installs all needed dependencies
+--- any additional setup needed
+- runs main.py once all setup is done
+
+main.py:
+- does any needed setup steps
+- starts the program
+
+data_extractor.py:
+- function to find all memory offsets for all the values: Searching the memory for these values has already been done using the attached CT scripts. all you need to do is translate the exact algorithms in the CT script into python using whichever library performs best. Some of the values will not be accounted for in the CT scripts yet. Those will be added later.
+- function to return a "snapshot" of all of the listed datapoints. This "snapshot" should be captured in a way so that none of the values change between the beginning and the end of the capture, to ensure synchronization between the values. There should also be an "if" statement with a placeholder condition before capturing all of the values OTHER THAN "Race completion %" and "Timer value". This function should then take all of the values it gathers (either those two or all of them) and first add them to a dictionary (of the same format as the race_data part of the ghost files as outlined later), then return them.
+- a function that loops until it detects a race start (the condition for this will be added later) and then return true once it detects one.
+- a function that detects a race end, again with a placeholder condition, if it detects a race end it passes the dictionary mentioned above to the ghost_manager function to save it, then returns True. Return False if no race end is detected.
+
+ghost_manager.py:
+- this file manages "ghost" files which are used to save all the data collected during every race.
+- function to load a ghost file, given a file path.
+- function to create a ghost file.
+- function to save all data from a race to a ghost file. The ghost file should be a json file with three dictionaries: best_splits,splits,and race_data
+- race_data: contains all the data from a race. each line will have categories for each of the data points that are available for the given frame. Some frames will only have data for "Race completion %" and "Timer value", which is to be expected.
+- splits: contains the splits the user has configured. each split should be a race completion value and a name value. A GUI function will manage these.
+- best_splits: like race_data but only contains "Race completion %" and "Timer value". when the user beats their best time in one of the splits, the program replaces the corresponding section of best_splits defined by that split with the data from the same section of the new run. The timer values should be normalized so that best_splits is indistinguishable from a normal race_data list (when looking only at "race completion %" and "timer value")
+
+gui.py:
+- use whatever library has the best performance with windows. it should be able to update many times per second without any visual artifacts such as flashing or tearing.
+- should have a panel that minimizes to just a "settings" button and a "close" button when no race is detected.
+- during a race, it will expand to show all of the values the user selected in settings, and continue to show the "settings" and "close" buttons.
+- settings: a new window will pop up which allows the user to change essentially everything about the GUI. They should be able to select and deselect every data point that can be displayed, in order to only see the information they want to see.
+- There should be a ghost menu in the settings, which allows the user to choose a ghost and create a new ghost (prompt the user to configure splits for the new ghost, and give the option to skip split configuration)
+- Velocity should have 4 modes: Real Total, Fake Total, Real Horizontal, and Fake Horizontal (add to settings)
+- Colors should be customizable using color pickers. (add to settings)
+- section in the settings menu for hotkeys. The user should be able to choose hotkeys to do the following actions: 
+- Display showing how far the user is ahead or behind of the current ghost. It should use interpolation between the two nearest "timer value" values in the ghost file to the current "timer value" value. The background of this specific display should change according to whether the user is ahead, behind, or equal to their ghost.
+- Every data point should have a separate section of the telemetry window to ensure easy modifications to the code can be made later on, and so more datapoints can be added to the telemetry.
+- Updates during the race will only happen when a physics update has been detected in the data_extractor function.
+
+Remember that this code is only a draft. Feel free to use placeholders wherever needed, the only requirement is that all of these should be consistently marked with "# placeholder" at the end of the line, so they will be easy to find and edit later.
+
+Ask any clarifying questions needed. Reference programs can be provided for the ghost manager, split files, and the live comparison against the selected ghost if desired.
+
+Ensure that the program is well commented and variables are easily identifiable.
